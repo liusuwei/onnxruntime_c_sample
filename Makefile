@@ -9,7 +9,7 @@ build:
 
 run:
  @echo run application..
- .\bin\main.exe .\bin\candy.onnx .\bin\000000000285_720.png .\bin\output.png
+ .\bin\main.exe .\bin\resnet50-v2-7.onnx .\bin\000000000285_224.png .\bin\output.png
 
 # Clean
 clean:

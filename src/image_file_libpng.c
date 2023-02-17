@@ -1,6 +1,21 @@
 #include "image_file_libpng.h"
 #include <png.h>
 
+// The data format is nchw
+void normalize(float** data, int data_length) {
+  //             {    R,     G,     B}
+  float mean[] = {0.485, 0.456, 0.406};
+  float stddev[] = {0.229, 0.224, 0.225};
+  float* temp = *data;
+
+  int j = 0;
+  for (int i = 0; i < data_length; ++i) {
+    if (i == data_length / 3 * (j + 1)) {j++;}
+    *(*data + i) = (*(*data + i) / 255.0 - mean[2 - j]) / stddev[2 - j];
+    //*(*data + (2 - j) * data_length / 3 + i) = (temp[i] / 255.0 - mean[2 - j]) / stddev[2 - j];
+  }
+}
+
 const char* convert_wc_to_c(const wchar_t* wc) {
   size_t i;
   char *converted_wc = (char*)malloc(sizeof(char*)*100);
@@ -28,7 +43,7 @@ int read_image_file(const ORTCHAR_T* input_file, size_t* height, size_t* width, 
   uint8_t* buffer;
   image.format = PNG_FORMAT_BGR;
   size_t input_data_length = PNG_IMAGE_SIZE(image);
-  if (input_data_length != 720 * 720 * 3) {
+  if (input_data_length != 224 * 224 * 3) {
     printf("input_data_length:%zd\n", input_data_length);
     return -1;
   }
@@ -38,6 +53,7 @@ int read_image_file(const ORTCHAR_T* input_file, size_t* height, size_t* width, 
     return -1;
   }
   hwc_to_chw(buffer, image.height, image.width, out, output_count);
+  normalize(out, input_data_length);
   free(buffer);
   *width = image.width;
   *height = image.height;

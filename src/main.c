@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "onnxruntime_c_api.h"
 #include "image_file_libpng.h"
+#include "labels.h"
 
 #define ORT_ABORT_ON_ERROR(expr)                             \
   do {                                                       \
@@ -12,6 +13,51 @@
       abort();                                               \
     }                                                        \
   } while (0);
+
+void softmax_output(float** output_data) {
+  //float sum = 0.0;
+  //for (int i = 0; i < 1000; ++i) {
+  //  *(*output_data + i) = expf(*(*output_data + i));
+  //  sum += *(*output_data + i);
+  //}
+  //for (int i = 0; i < 1000; ++i) {
+  //  *(*output_data + i) = *(*output_data + i) / sum;
+  //}
+}
+
+void print_top10_predictions(float *output_data) {
+  int* class = (int*)malloc(sizeof(int)*10);
+  float* score = (float*)malloc(sizeof(float)*10);
+  memset(class, 0, sizeof(int));
+  memset(score, 0, sizeof(float));
+
+  for (int i = 0; i < 1000; ++i) {
+    if (score[0] <= output_data[i]) {
+      for (int j = 0; j < 9; ++j) {
+        score[9 - j] = score[9 - j - 1];
+        class[9 - j] = class[9 - j - 1];
+      }
+      score[0] = output_data[i];
+      class[0] = i;
+    }
+  }
+  for (int i = 0; i < 10; ++i) {
+    printf("class%d-%s: %f\n", class[i] + 1, labels[class[i]], score[i]);
+  }
+
+  //float max_score = 0.0;
+  //for (int i = 0; i < 1000; ++i) {
+  //  if (max_score <= output_data[i]) {
+  //    class = i;
+  //    max_score = output_data[i];
+  //  }
+  //  printf("class%d-%s: %f\n", i + 1, labels[i], output_data[i]);
+  //}
+  //printf("class%d-%s: %f\n", class + 1, labels[class], max_score);
+
+  free(class);
+  free(score);
+}
 
 /**
  * convert input from HWC format to CHW format
@@ -64,14 +110,14 @@ int run_inference(OrtApi* ort, OrtSession* session, const ORTCHAR_T* input_file,
     printf("read image file fail\n");
     return -1;
   }
-  if (input_height != 720 || input_width != 720) {
-    printf("please resize to image to 720x720\n");
+  if (input_height != 224 || input_width != 224) {
+    printf("please resize to image to 224x224\n");
     free(model_input);
     return -1;
   }
   OrtMemoryInfo* memory_info;
   ORT_ABORT_ON_ERROR(ort->CreateCpuMemoryInfo(OrtArenaAllocator, OrtMemTypeDefault, &memory_info));
-  const int64_t input_shape[] = {1, 3, 720, 720};
+  const int64_t input_shape[] = {1, 3, 224, 224};
   const size_t input_shape_len = sizeof(input_shape) / sizeof(input_shape[0]);
   const size_t model_input_len = model_input_ele_count * sizeof(float);
 
@@ -82,8 +128,8 @@ int run_inference(OrtApi* ort, OrtSession* session, const ORTCHAR_T* input_file,
   int is_tensor;
   ORT_ABORT_ON_ERROR(ort->IsTensor(input_tensor, &is_tensor));
   ort->ReleaseMemoryInfo(memory_info);
-  const char* input_names[] = {"inputImage"};
-  const char* output_names[] = {"outputImage"};
+  const char* input_names[] = {"data"};
+  const char* output_names[] = {"resnetv24_dense0_fwd"};
   OrtValue* output_tensor = NULL;
   ORT_ABORT_ON_ERROR(ort->Run(session, NULL, input_names, (const OrtValue* const*)&input_tensor, 1, output_names, 1,
                                 &output_tensor));
@@ -91,12 +137,14 @@ int run_inference(OrtApi* ort, OrtSession* session, const ORTCHAR_T* input_file,
   int ret = 0;
   float* output_tensor_data = NULL;
   ORT_ABORT_ON_ERROR(ort->GetTensorMutableData(output_tensor, (void**)&output_tensor_data));
-  uint8_t* output_image_data = NULL;
-  chw_to_hwc(output_tensor_data, 720, 720, &output_image_data);
-  if (write_image_file(output_image_data, 720, 720, output_file) != 0) {
-    printf("write image file fail\n");
-    ret = -1;
-  }
+  softmax_output(&output_tensor_data);
+  print_top10_predictions(output_tensor_data);
+  //uint8_t* output_image_data = NULL;
+  //chw_to_hwc(output_tensor_data, 224, 224, &output_image_data);
+  //if (write_image_file(output_image_data, 224, 224, output_file) != 0) {
+  //  printf("write image file fail\n");
+  //  ret = -1;
+  //}
   ort->ReleaseValue(output_tensor);
   ort->ReleaseValue(input_tensor);
   free(model_input);
