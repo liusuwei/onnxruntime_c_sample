@@ -67,6 +67,13 @@ const char* convert_wc_to_c(const wchar_t* wc) {
   return converted_wc;
 }
 
+void free_wc_or_c(void ** wc_or_c) {
+  if (wc_or_c != NULL && *wc_or_c != NULL) {
+    free(*wc_or_c);
+    *wc_or_c = NULL;
+  }
+}
+
 /**
  * convert input from HWC format to CHW format
  * \param input A single image. The byte array has length of 3*h*w
@@ -195,6 +202,9 @@ int main(int argc, char* argv[]) {
   ort->ReleaseSessionOptions(session_options);
   ort->ReleaseSession(session);
   ort->ReleaseEnv(env);
+  free_wc_or_c(&model_path);
+  free_wc_or_c(&input_file);
+  free_wc_or_c(&output_file);
   if (ret != 0) {
     fprintf(stderr, "fail\n");
   }

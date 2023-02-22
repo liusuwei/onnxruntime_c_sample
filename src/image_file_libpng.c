@@ -21,7 +21,8 @@ int read_image_file(const ORTCHAR_T* input_file, size_t* height, size_t* width, 
   /* Initialize the 'png_image' structure. */
   memset(&image, 0, (sizeof image));
   image.version = PNG_IMAGE_VERSION;
-  if (png_image_begin_read_from_file(&image, convert_wc_to_c(input_file)) == 0) {
+  char *input_file_c = convert_wc_to_c(input_file);
+  if (png_image_begin_read_from_file(&image, input_file_c) == 0) {
     return -1;
   }
   uint8_t* buffer;
@@ -39,6 +40,7 @@ int read_image_file(const ORTCHAR_T* input_file, size_t* height, size_t* width, 
   hwc_to_chw(buffer, image.height, image.width, out, output_count);
   normalize(out, input_data_length);
   free(buffer);
+  free_wc_or_c(&input_file_c);
   *width = image.width;
   *height = image.height;
   return 0;
