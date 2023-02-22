@@ -45,16 +45,6 @@ void print_top10_predictions(float *output_data) {
     printf("class%d-%s: %f\n", class[i] + 1, labels[class[i]], score[i]);
   }
 
-  //float max_score = 0.0;
-  //for (int i = 0; i < 1000; ++i) {
-  //  if (max_score <= output_data[i]) {
-  //    class = i;
-  //    max_score = output_data[i];
-  //  }
-  //  printf("class%d-%s: %f\n", i + 1, labels[i], output_data[i]);
-  //}
-  //printf("class%d-%s: %f\n", class + 1, labels[class], max_score);
-
   free(class);
   free(score);
 }

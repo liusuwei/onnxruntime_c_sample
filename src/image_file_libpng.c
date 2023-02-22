@@ -23,13 +23,6 @@ const char* convert_wc_to_c(const wchar_t* wc) {
   wcstombs_s(&i, converted_wc, (size_t)100, wc, (size_t)100 - 1);
   printf( "Convert wide-character string: %s\n", converted_wc);
   return converted_wc;
-
-  //unsafe version
-  //size_t wcsize = wcslen(wc);
-  //char converted_wc[100];
-  //wcstombs(converted_wc, wc, wcsize + 1);
-  //printf("Convert wide-character string: %s\n", converted_wc);
-  //return converted_wc;
 }
 
 int read_image_file(const ORTCHAR_T* input_file, size_t* height, size_t* width, float** out, size_t* output_count) {
