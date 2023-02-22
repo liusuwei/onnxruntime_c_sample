@@ -21,7 +21,7 @@ int read_image_file(const ORTCHAR_T* input_file, size_t* height, size_t* width, 
   /* Initialize the 'png_image' structure. */
   memset(&image, 0, (sizeof image));
   image.version = PNG_IMAGE_VERSION;
-  char *input_file_c = convert_wc_to_c(input_file);
+  char* input_file_c = convert_wc_to_c(input_file);
   if (png_image_begin_read_from_file(&image, input_file_c) == 0) {
     return -1;
   }

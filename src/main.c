@@ -25,20 +25,43 @@ void softmax_output(float** output_data) {
   //}
 }
 
+void mem_insert_f(float** mem, int insert_location, float insert_value) {
+  if (insert_location == 0)
+    memmove(*mem + 1, *mem, sizeof(float)*(10 - 1));
+  else
+    memmove(*mem + insert_location, *mem + insert_location - 1, sizeof(float)*(10 - insert_location));
+  *(*mem + insert_location) = insert_value;
+}
+
+void mem_insert_i(int** mem, int insert_location, int insert_value) {
+  if (insert_location == 0)
+    memmove(*mem + 1, *mem, sizeof(int)*(10 - 1));
+  else
+    memmove(*mem + insert_location, *mem + insert_location - 1, sizeof(int)*(10 - insert_location));
+  *(*mem + insert_location) = insert_value;
+}
+
 void print_top10_predictions(float *output_data) {
   int* class = (int*)malloc(sizeof(int)*10);
   float* score = (float*)malloc(sizeof(float)*10);
-  memset(class, 0, sizeof(int));
-  memset(score, 0, sizeof(float));
+  memset(class, 0, sizeof(int)*10);
+  memset(score, 0, sizeof(float)*10);
 
   for (int i = 0; i < 1000; ++i) {
-    if (score[0] <= output_data[i]) {
-      for (int j = 0; j < 9; ++j) {
-        score[9 - j] = score[9 - j - 1];
-        class[9 - j] = class[9 - j - 1];
+    if (score[9] < output_data[i]) {
+      int k = 0;
+      for (int j = 0; j < 10; ++j) {
+        if (score[j] < output_data[i]) {
+          k++;
+        }
       }
-      score[0] = output_data[i];
-      class[0] = i;
+      mem_insert_f(&score, 10 - k, output_data[i]);
+      mem_insert_i(&class, 10 - k, i);
+      //printf("score[");
+      //for (int k = 0; k < 10; ++k) {
+      //  printf("%f,", class[k]);
+      //}
+      //printf("\b]\n");
     }
   }
   for (int i = 0; i < 10; ++i) {
