@@ -23,6 +23,8 @@ int write_image_file(_In_ uint8_t* model_output_bytes, unsigned int height,
  * \param output_count Array length of the `output` param
  */
 void hwc_to_chw(const uint8_t* input, size_t h, size_t w, float** output, size_t* output_count);
+
+const char* convert_wc_to_c(const wchar_t* wc);
 #ifdef __cplusplus
 }
 #endif

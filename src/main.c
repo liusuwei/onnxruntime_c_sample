@@ -49,6 +49,24 @@ void print_top10_predictions(float *output_data) {
   free(score);
 }
 
+const wchar_t* convert_c_to_wc(const char* c) {
+  size_t i;
+  wchar_t *converted_c = (wchar_t*)malloc(sizeof(wchar_t*)*100);
+
+  mbstowcs_s(&i, converted_c, (size_t)100, c, (size_t)100 - 1);
+  printf( "Convert multibyte string: %ls\n", converted_c);
+  return converted_c;
+}
+
+const char* convert_wc_to_c(const wchar_t* wc) {
+  size_t i;
+  char *converted_wc = (char*)malloc(sizeof(char*)*99);
+
+  wcstombs_s(&i, converted_wc, (size_t)99, wc, (size_t)100 - 1);
+  printf( "Convert wide-character string: %s\n", converted_wc);
+  return converted_wc;
+}
+
 /**
  * convert input from HWC format to CHW format
  * \param input A single image. The byte array has length of 3*h*w
@@ -142,15 +160,6 @@ int run_inference(OrtApi* ort, OrtSession* session, const ORTCHAR_T* input_file,
 }
 
 static void usage() { printf("usage: <model_path> <input_file> <output_file>\n"); }
-
-const wchar_t* convert_c_to_wc(const char* c) {
-  size_t i;
-  wchar_t *converted_c = (wchar_t*)malloc(sizeof(wchar_t*)*100);
-
-  mbstowcs_s(&i, converted_c, (size_t)100, c, (size_t)100 - 1);
-  printf( "Convert multibyte string: %ls\n", converted_c);
-  return converted_c;
-}
 
 int main(int argc, char* argv[]) {
   if (argc < 3) {

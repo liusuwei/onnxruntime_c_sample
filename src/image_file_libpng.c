@@ -16,15 +16,6 @@ void normalize(float** data, int data_length) {
   }
 }
 
-const char* convert_wc_to_c(const wchar_t* wc) {
-  size_t i;
-  char *converted_wc = (char*)malloc(sizeof(char*)*100);
-
-  wcstombs_s(&i, converted_wc, (size_t)100, wc, (size_t)100 - 1);
-  printf( "Convert wide-character string: %s\n", converted_wc);
-  return converted_wc;
-}
-
 int read_image_file(const ORTCHAR_T* input_file, size_t* height, size_t* width, float** out, size_t* output_count) {
   png_image image; /* The control structure used by libpng */
   /* Initialize the 'png_image' structure. */
