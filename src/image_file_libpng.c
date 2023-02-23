@@ -6,14 +6,17 @@ void normalize(float** data, int data_length) {
   //             {    R,     G,     B}
   float mean[] = {0.485, 0.456, 0.406};
   float stddev[] = {0.229, 0.224, 0.225};
-  float* temp = *data;
+  float* temp = (float*)malloc(sizeof(float)*data_length);
+  memmove(temp, *data, sizeof(float)*data_length);
 
   int j = 0;
   for (int i = 0; i < data_length; ++i) {
     if (i == data_length / 3 * (j + 1)) {j++;}
-    *(*data + i) = (*(*data + i) / 255.0 - mean[2 - j]) / stddev[2 - j];
-    //*(*data + (2 - j) * data_length / 3 + i) = (temp[i] / 255.0 - mean[2 - j]) / stddev[2 - j];
+    //*(*data + i) = (temp[i] / 255.0 - mean[2 - j]) / stddev[2 - j];
+    *(*data + (2 - 2 * j) * data_length / 3 + i) = (temp[i] / 255.0 - mean[2 - j]) / stddev[2 - j];
   }
+  //printf("%f, %f, %f, %f\n", *(*data + data_length / 3 * 0 + 0), *(*data + data_length / 3 * 0 + 1), *(*data + data_length / 3 * 0 + 2), *(*data + data_length / 3 * 0 + 3));
+  free(temp);
 }
 
 int read_image_file(const ORTCHAR_T* input_file, size_t* height, size_t* width, float** out, size_t* output_count) {

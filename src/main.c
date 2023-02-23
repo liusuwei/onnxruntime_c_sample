@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include "onnxruntime_c_api.h"
 #include "image_file_libpng.h"
 #include "labels.h"
@@ -15,14 +16,14 @@
   } while (0);
 
 void softmax_output(float** output_data) {
-  //float sum = 0.0;
-  //for (int i = 0; i < 1000; ++i) {
-  //  *(*output_data + i) = expf(*(*output_data + i));
-  //  sum += *(*output_data + i);
-  //}
-  //for (int i = 0; i < 1000; ++i) {
-  //  *(*output_data + i) = *(*output_data + i) / sum;
-  //}
+  float sum = 0.0;
+  for (int i = 0; i < 1000; ++i) {
+    *(*output_data + i) = expf(*(*output_data + i));
+    sum += *(*output_data + i);
+  }
+  for (int i = 0; i < 1000; ++i) {
+    *(*output_data + i) = *(*output_data + i) / sum;
+  }
 }
 
 void mem_insert_f(float** mem, int insert_location, float insert_value) {
@@ -138,7 +139,7 @@ static void chw_to_hwc(const float* input, size_t h, size_t w, uint8_t** output)
   *output = output_data;
 }
 
-int run_inference(OrtApi* ort, OrtSession* session, const ORTCHAR_T* input_file, const ORTCHAR_T* output_file) {
+int run_inference(OrtApi* ort, OrtSession* session, const ORTCHAR_T* input_file) {
   size_t input_height;
   size_t input_width;
   float* model_input;
@@ -177,19 +178,13 @@ int run_inference(OrtApi* ort, OrtSession* session, const ORTCHAR_T* input_file,
   ORT_ABORT_ON_ERROR(ort->GetTensorMutableData(output_tensor, (void**)&output_tensor_data));
   softmax_output(&output_tensor_data);
   print_top10_predictions(output_tensor_data);
-  //uint8_t* output_image_data = NULL;
-  //chw_to_hwc(output_tensor_data, 224, 224, &output_image_data);
-  //if (write_image_file(output_image_data, 224, 224, output_file) != 0) {
-  //  printf("write image file fail\n");
-  //  ret = -1;
-  //}
   ort->ReleaseValue(output_tensor);
   ort->ReleaseValue(input_tensor);
   free(model_input);
   return ret;
 }
 
-static void usage() { printf("usage: <model_path> <input_file> <output_file>\n"); }
+static void usage() { printf("usage: <model_path> <input_file>\n"); }
 
 int main(int argc, char* argv[]) {
   if (argc < 3) {
@@ -198,7 +193,6 @@ int main(int argc, char* argv[]) {
   }
   ORTCHAR_T* model_path = convert_c_to_wc(argv[1]);
   ORTCHAR_T* input_file = convert_c_to_wc(argv[2]);
-  ORTCHAR_T* output_file = convert_c_to_wc(argv[3]);
 
   const OrtApiBase* ortBase;
   const OrtApi* ort = NULL;
@@ -221,13 +215,12 @@ int main(int argc, char* argv[]) {
   ORT_ABORT_ON_ERROR(ort->CreateSessionOptions(&session_options));
   ORT_ABORT_ON_ERROR(ort->CreateSession(env, model_path, session_options, &session));
   int ret = 0;
-  ret = run_inference(ort, session, input_file, output_file);
+  ret = run_inference(ort, session, input_file);
   ort->ReleaseSessionOptions(session_options);
   ort->ReleaseSession(session);
   ort->ReleaseEnv(env);
   free_wc_or_c(&model_path);
   free_wc_or_c(&input_file);
-  free_wc_or_c(&output_file);
   if (ret != 0) {
     fprintf(stderr, "fail\n");
   }
