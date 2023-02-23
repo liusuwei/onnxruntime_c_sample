@@ -12,8 +12,9 @@ void normalize(float** data, int data_length) {
   int j = 0;
   for (int i = 0; i < data_length; ++i) {
     if (i == data_length / 3 * (j + 1)) {j++;}
+    *(*data + i) = (temp[i] / 255.0 - mean[j]) / stddev[j];
     //*(*data + i) = (temp[i] / 255.0 - mean[2 - j]) / stddev[2 - j];
-    *(*data + (2 - 2 * j) * data_length / 3 + i) = (temp[i] / 255.0 - mean[2 - j]) / stddev[2 - j];
+    //*(*data + (2 - 2 * j) * data_length / 3 + i) = (temp[i] / 255.0 - mean[2 - j]) / stddev[2 - j];
   }
   //printf("%f, %f, %f, %f\n", *(*data + data_length / 3 * 0 + 0), *(*data + data_length / 3 * 0 + 1), *(*data + data_length / 3 * 0 + 2), *(*data + data_length / 3 * 0 + 3));
   free(temp);
@@ -29,7 +30,8 @@ int read_image_file(const ORTCHAR_T* input_file, size_t* height, size_t* width, 
     return -1;
   }
   uint8_t* buffer;
-  image.format = PNG_FORMAT_BGR;
+  //image.format = PNG_FORMAT_BGR;
+  image.format = PNG_FORMAT_RGB;
   size_t input_data_length = PNG_IMAGE_SIZE(image);
   if (input_data_length != 224 * 224 * 3) {
     printf("input_data_length:%zd\n", input_data_length);
@@ -40,6 +42,7 @@ int read_image_file(const ORTCHAR_T* input_file, size_t* height, size_t* width, 
   if (png_image_finish_read(&image, NULL /*background*/, buffer, 0 /*row_stride*/, NULL /*colormap*/) == 0) {
     return -1;
   }
+  //printf("%d\n", buffer[0]);
   hwc_to_chw(buffer, image.height, image.width, out, output_count);
   normalize(out, input_data_length);
   free(buffer);
